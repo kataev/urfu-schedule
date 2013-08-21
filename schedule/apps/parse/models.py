@@ -3,12 +3,27 @@ from django.db import models
 
 
 class Faculty(models.Model):
-    name = models.CharField(u'Имя', max_length=300)
+    name = models.CharField(u'Имя', max_length=300, unique=True)
+
+    def __unicode__(self):
+        return self.name
+
+    @property
+    def url(self):
+        return 'http://urfu.ru/student/schedule/faculty/%d/' % self.pk
 
 
 class Group(models.Model):
-    course = models.IntegerField(u'Курс')
+    faculty = models.ForeignKey(Faculty, verbose_name=u'Факультет')
     name = models.CharField(u'Имя', max_length=300)
+    course = models.IntegerField(u'Курс')
+
+    class Meta(object):
+        unique_together = ['faculty', 'name']
+
+    @property
+    def url(self):
+        return 'http://urfu.ru/student/schedule/faculty/%d/group/%d/' % (self.faculty_id, self.pk)
 
 
 class Professor(models.Model):

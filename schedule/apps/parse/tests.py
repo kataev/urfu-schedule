@@ -6,11 +6,12 @@ Replace this with more appropriate tests for your application.
 """
 
 from django.test import TestCase
+from .tasks import get_schedule
+from .models import Faculty, Group
+from django.db.models import Count
 
-
-class SimpleTest(TestCase):
-    def test_basic_addition(self):
-        """
-        Tests that 1 + 1 always equals 2.
-        """
-        self.assertEqual(1 + 1, 2)
+class ScheduleGetTest(TestCase):
+    def test_basic(self):
+        result = get_schedule.delay()
+        self.assertEqual(Faculty.objects.count(), 11)
+        self.assertEqual(Group.objects.count(), 1215)
