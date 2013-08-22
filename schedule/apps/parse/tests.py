@@ -10,4 +10,3 @@ class ScheduleGetTest(TestCase):
         result = get_schedule.delay(limit=2)
         self.assertTrue(Faculty.objects.count())
         self.assertTrue(Group.objects.count())
-        print Lesson.object.count()

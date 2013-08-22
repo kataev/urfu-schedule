@@ -2,6 +2,7 @@
 
 
 from os.path import join, normpath
+from os import environ
 
 from common import *
 
@@ -65,8 +66,39 @@ INSTALLED_APPS += (
 # See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
 INTERNAL_IPS = ('127.0.0.1',)
 
+DEBUG_TOOLBAR_CONFIG = {
+    'INTERCEPT_REDIRECTS': False,
+}
+
 # See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
 MIDDLEWARE_CLASSES += (
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'social_auth.middleware.SocialAuthExceptionMiddleware',
 )
 ########## END TOOLBAR CONFIGURATION
+
+SOCIAL_AUTH_RAISE_EXCEPTIONS = True
+
+
+
+GOOGLE_OAUTH2_CLIENT_ID = environ.get('GOOGLE_ID')
+GOOGLE_OAUTH2_CLIENT_SECRET =  environ.get('GOOGLE_SECRET')
+GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {'access_type': 'offline'}
+GOOGLE_OAUTH2_EXTRA_SCOPE = ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.readonly',]
+
+AUTHENTICATION_BACKENDS = (
+    'social_auth.backends.google.GoogleOAuth2Backend',
+    'social_auth.backends.google.GoogleBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_PIPELINE = (
+    'social_auth.backends.pipeline.social.social_auth_user',
+    #'social_auth.backends.pipeline.associate.associate_by_email',
+    'social_auth.backends.pipeline.user.get_username',
+    'social_auth.backends.pipeline.user.create_user',
+    'social_auth.backends.pipeline.social.associate_user',
+    'social_auth.backends.pipeline.social.load_extra_data',
+    'social_auth.backends.pipeline.user.update_user_details',
+    'schedule.apps.core.pipeline.info',
+)

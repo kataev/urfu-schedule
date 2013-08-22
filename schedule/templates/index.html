@@ -1,0 +1,14 @@
+<html>
+<body>
+{% if user.is_authenticated %}
+    <li><a href="{% url "logout" %}">Logout</a></li>
+    <li class='pull-right'><a href="#"><strong>{{ user }}</strong></a></li>
+    {% for social in user.social_auth.all %}
+        <li>{{ social }}</li>
+    {% endfor %}
+{% else %}
+    <a href='{% url "socialauth_begin" 'google-oauth2' %}'>Login</a>
+{% endif %}
+
+</body>
+</html>

@@ -199,6 +199,7 @@ THIRD_PARTY_APPS = (
 
     # Asynchronous task queue:
     'djcelery',
+    'social_auth',
 )
 
 LOCAL_APPS = (
