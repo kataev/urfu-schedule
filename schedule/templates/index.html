@@ -4,7 +4,7 @@
     <li><a href="{% url "logout" %}">Logout</a></li>
     <li class='pull-right'><a href="#"><strong>{{ user }}</strong></a></li>
     {% for social in user.social_auth.all %}
-        <li>{{ social }}</li>
+        <li>{{ social }} {{ social.tokens }}</li>
     {% endfor %}
 {% else %}
     <a href='{% url "socialauth_begin" 'google-oauth2' %}'>Login</a>

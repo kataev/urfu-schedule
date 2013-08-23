@@ -84,7 +84,7 @@ SOCIAL_AUTH_RAISE_EXCEPTIONS = True
 GOOGLE_OAUTH2_CLIENT_ID = environ.get('GOOGLE_ID')
 GOOGLE_OAUTH2_CLIENT_SECRET =  environ.get('GOOGLE_SECRET')
 GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {'access_type': 'offline'}
-GOOGLE_OAUTH2_EXTRA_SCOPE = ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.readonly',]
+GOOGLE_OAUTH_EXTRA_SCOPE = ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.readonly',]
 
 AUTHENTICATION_BACKENDS = (
     'social_auth.backends.google.GoogleOAuth2Backend',
