@@ -1,18 +1,12 @@
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
-
-Replace this with more appropriate tests for your application.
-"""
 from os import environ
 from django.test import TestCase
 import requests
 
 
-class SimpleTest(TestCase):
-    def test_basic_addition(self):
-        access_token = environ.get('ACCESS_TOKEN')
-
+class GoogleCalendarApi(TestCase):
+    def test_basic(self):
+        with open('token', 'r') as file:
+            access_token = file.read()
         self.assertTrue(access_token)
 
         authorization_header = {"Authorization": "OAuth %s" % access_token}
