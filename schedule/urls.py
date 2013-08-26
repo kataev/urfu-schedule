@@ -15,7 +15,9 @@ urlpatterns = patterns('',
 )
 
 urlpatterns += patterns('schedule.parse.views',
-    url(r'^$', 'index'),
+    url(r'^$', 'index', name='index'),
+    url(r'^login$', 'login', name='login'),
+    url(r'^groups$', 'groups', name='groups'),
 )
 
 urlpatterns += patterns('django.contrib.auth.views',

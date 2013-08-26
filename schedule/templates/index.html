@@ -1,14 +1,108 @@
-<html>
-<body>
-{% if user.is_authenticated %}
-    <li><a href="{% url "logout" %}">Logout</a></li>
-    <li class='pull-right'><a href="#"><strong>{{ user }}</strong></a></li>
-    {% for social in user.social_auth.all %}
-        <li>{{ social }} {{ social.tokens }}</li>
-    {% endfor %}
-{% else %}
-    <a href='{% url "socialauth_begin" 'google-oauth2' %}'>Login</a>
-{% endif %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
 
+    <title>Narrow Jumbotron Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/static/css/style.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="../../assets/js/html5shiv.js"></script>
+      <script src="../../assets/js/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+{% load i18n %}
+<div class="container">
+    <div class="header">
+        <ul class="nav nav-pills pull-right">
+            {% if user.is_authenticated %}
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <strong>{{ user }}</strong> <b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu" role='menu'>
+                        <li><a href="{% url "logout" %}">{% trans 'Logout' %}</a></li>
+                    </ul>
+                </li>
+            {% else %}
+                <li><a href='{% url "socialauth_begin" 'google-oauth2' %}'>{% trans 'Login' %}</a></li>
+            {% endif %}
+        </ul>
+        <h3 class="text-muted"><a href='/'>Расписание</a>
+            <small>УРФУ</small>
+        </h3>
+    </div>
+    {% block main %}
+        {% if not user.is_authenticated %}
+            {% include 'promo.html' %}
+        {% else %}
+
+            {% for cl in user.classes.all %}
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4>{{ cl.name }}
+                            <small>{{ cl.faculty }}</small>
+                        </h4>
+                    </div>
+                    <table class='table panel-body'>
+                        {% for les in cl.lessons.all %}
+                            <tr>
+                                {% ifchanged les.day %}
+                                    <th rowspan="5">
+                                        <span style="-webkit-transform: rotate(-90deg);">
+                                            {{ les.get_day_display }}
+                                        </span>
+                                    </th>
+                                {% endifchanged %}
+
+                                <td>{{ les.npair }}</td>
+                                <td>{{ les.subject }}</td>
+                                <td>{{ les.professor }}</td>
+                                <td>{{ les.room }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                    <div class="panel-footer">Panel footer</div>
+                </div>
+
+
+            {% empty %}
+                <form method='POST'>
+                    {% csrf_token %}
+                    <label for="favorite_team">Группа:</label>
+                    <input type="text" name="group" id="group" list="group_list">
+                    <datalist id='group_list'>
+                        {% for pk, name, faculty in groups %}
+                            <option value='{{ name }}'>{{ faculty }}</option>
+                        {% endfor %}
+                    </datalist>
+                    <button>Сохранить</button>
+                </form>
+            {% endfor %}
+
+        {% endif %}
+    {% endblock %}
+
+    <div class="footer">
+        <p>&copy; Company 2013</p>
+    </div>
+
+</div>
+
+<script src="//code.jquery.com/jquery.js"></script>
+
+<script src="/static/js/bootstrap.js"></script>
+<script src="/static/js/typeahead.js"></script>
 </body>
 </html>

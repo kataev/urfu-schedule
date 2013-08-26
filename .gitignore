@@ -18,3 +18,4 @@ build
 celerybeat-schedule
 
 schedule/token*
+*.DS_Store

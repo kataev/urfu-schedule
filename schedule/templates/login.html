@@ -1,0 +1,13 @@
+{% extends 'index.html' %}
+{% block main %}
+    <div class="jumbotron">
+        <h1>Расписание пар <br>
+            <small>В вашем телефоне!</small>
+        </h1>
+
+        <p class="lead">Зарегистрируйтесь и вы сможете дежать расписание своих пар всегда под рукой, в своем
+            телефоне!</p>
+
+        <p><a class="btn btn-lg btn-success" href="{% url 'login' %}">Зарегистрируйтесь сейчас</a></p>
+    </div>
+{% endblock %}
