@@ -17,4 +17,4 @@ build
 # Celerybeat scheduler file:
 celerybeat-schedule
 
-schedule/token
+schedule/token*
