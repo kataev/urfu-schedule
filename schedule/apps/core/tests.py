@@ -1,5 +1,6 @@
 from os import environ
 from django.test import TestCase
+import datetime
 import requests
 import json
 
@@ -39,3 +40,35 @@ class GoogleCalendarApi(TestCase):
         self.add(access_token, calendar_id)
         self.delete(access_token, calendar_id)
         self.assertEqual(count, len(self.list(access_token)))
+
+
+    def test_add_event(self):
+        
+        calendar_id = 'pr3dj0unj2fbtlisn4pi5boj2o@group.calendar.google.com'
+        with open('token_1', 'r') as file:
+            access_token = file.read()
+        authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
+
+        data = {'start':{'dateTime':datetime.datetime.utcnow().replace(hour=10).isoformat(),'timeZone':'Europe/Zurich'},
+                'end':{'dateTime':datetime.datetime.utcnow().isoformat(),'timeZone':'Europe/Zurich'},
+                'summary':'Created from api',
+                'description':'Created from api description'
+                }
+        
+        print data
+        r = requests.post("https://www.googleapis.com/calendar/v3/calendars/%s/events" % calendar_id,
+            headers=authorization_header, data=json.dumps(data))
+        print r.content
+        self.assertTrue(r.ok)
+        print r.text
+
+    def test_get_event_list(self):
+        calendar_id = 'pr3dj0unj2fbtlisn4pi5boj2o@group.calendar.google.com'
+        with open('token_1', 'r') as file:
+            access_token = file.read()
+        authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
+
+        r = requests.get("https://www.googleapis.com/calendar/v3/calendars/%s/events" % calendar_id,
+            headers=authorization_header)
+        self.assertTrue(r.ok)
+        print r.text
