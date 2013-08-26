@@ -14,7 +14,7 @@ urlpatterns = patterns('',
     url(r'', include('social_auth.urls')),
 )
 
-urlpatterns += patterns('schedule.apps.core.views',
+urlpatterns += patterns('schedule.parse.views',
     url(r'^$', 'index'),
 )
 

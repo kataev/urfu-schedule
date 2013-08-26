@@ -1,8 +1,19 @@
+# -*- coding: utf-8 -*-
+import requests
+import datetime
+import json
+
 from django.test import TestCase
 
-import datetime
-import requests
-import json
+from .tasks import get_schedule
+from .models import Faculty, Group
+
+
+class ScheduleGetTest(TestCase):
+    def test_basic(self):
+        result = get_schedule.delay(limit=2)
+        self.assertTrue(Faculty.objects.count())
+        self.assertTrue(Group.objects.count())
 
 
 class GoogleCalendarApi(TestCase):
@@ -49,10 +60,10 @@ class GoogleCalendarApi(TestCase):
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
 
         data = {
-        'start': {'dateTime': datetime.datetime.utcnow().replace(hour=10).isoformat(), 'timeZone': 'Europe/Zurich'},
-        'end': {'dateTime': datetime.datetime.utcnow().isoformat(), 'timeZone': 'Europe/Zurich'},
-        'summary': 'Created from api',
-        'description': 'Created from api description'
+            'start': {'dateTime': datetime.datetime.utcnow().replace(hour=10).isoformat(), 'timeZone': 'Europe/Zurich'},
+            'end': {'dateTime': datetime.datetime.utcnow().isoformat(), 'timeZone': 'Europe/Zurich'},
+            'summary': 'Created from api',
+            'description': 'Created from api description'
         }
 
         print data
