@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+import json
+import requests
+
+from celery.contrib.methods import task
+
 from django.db import models
 from django.utils.dates import WEEKDAYS
 from django.contrib.auth.models import AbstractUser
@@ -20,6 +25,8 @@ class Group(models.Model):
     name = models.CharField(u'Имя', max_length=300)
     course = models.IntegerField(u'Курс')
 
+    calendar_id = models.CharField(u'Айди календаря', max_length=300, null=True)
+
     class Meta(object):
         unique_together = ['faculty', 'name']
 
@@ -29,6 +36,46 @@ class Group(models.Model):
     @property
     def url(self):
         return 'http://urfu.ru/student/schedule/faculty/%d/group/%d/' % (self.faculty_id, self.pk)
+
+    @task
+    def create_calendar(self):
+        user = AUser.objects.get(pk=2)
+        social_auth = user.social_auth.get(provider='google-oauth2')
+        access_token = social_auth.extra_data['access_token']
+        authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
+        r = requests.post('https://www.googleapis.com/calendar/v3/calendars',
+                          headers=authorization_header,
+                          data=json.dumps({'summary': self.name}))
+        print r.content
+        if r.ok:
+            calendar_id = r.json()['id']
+            self.calendar_id = calendar_id
+            self.save()
+
+    @task
+    def share_calendar(self):
+        user = AUser.objects.get(pk=2)
+        social_auth = user.social_auth.get(provider='google-oauth2')
+        access_token = social_auth.extra_data['access_token']
+        authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
+        r = requests.post('https://www.googleapis.com/calendar/v3/calendars/%s/acl' % self.calendar_id,
+                          headers=authorization_header,
+                          data=json.dumps({'role': 'reader', 'scope': {'type': 'default'}}))
+        print r.content
+
+    @task
+    def delete_calendar(self):
+        user = AUser.objects.get(pk=2)
+        social_auth = user.social_auth.get(provider='google-oauth2')
+        access_token = social_auth.extra_data['access_token']
+        authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
+        r = requests.delete('https://www.googleapis.com/calendar/v3/calendars/%s' % self.calendar_id,
+                            headers=authorization_header)
+
+        print r.content
+        if r.ok:
+            self.calendar_id = None
+            self.save()
 
 
 class Professor(models.Model):
@@ -65,6 +112,18 @@ class Lesson(models.Model):
     professor = models.ForeignKey(Professor, verbose_name=u'Преподаватель')
     room = models.CharField(u'Аудитория', max_length=30)
 
+    def __unicode__(self):
+        return u'%s %d, %s' % (self.get_day_display(), self.npair, self.subject)
+
 
 class AUser(AbstractUser):
-        classes = models.ManyToManyField(Group)
+    classes = models.ManyToManyField(Group)
+
+    @task
+    def join_to_group(self, group):
+        social_auth = self.social_auth.get(provider='google-oauth2')
+        access_token = social_auth.extra_data['access_token']
+        authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
+        r = requests.post("https://www.googleapis.com/calendar/v3/users/me/calendarList",
+                          headers=authorization_header, data=json.dumps({'id': group.calendar_id}))
+        print r.content

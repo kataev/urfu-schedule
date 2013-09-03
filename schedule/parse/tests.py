@@ -5,13 +5,13 @@ import json
 
 from django.test import TestCase
 
-from .tasks import get_schedule
+from .tasks import *
 from .models import Faculty, Group
 
 
 class ScheduleGetTest(TestCase):
     def test_basic(self):
-        result = get_schedule.delay(limit=2)
+        result = get_schedule.delay(limit=None)
         self.assertTrue(Faculty.objects.count())
         self.assertTrue(Group.objects.count())
 
@@ -34,7 +34,6 @@ class GoogleCalendarApi(TestCase):
                           headers=authorization_header, data=json.dumps({'id': calendar_id}))
         self.assertTrue(r.ok)
 
-
     def delete(self, access_token, calendar_id):
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
         r = requests.post("https://www.googleapis.com/calendar/v3/users/me/calendarList",
@@ -52,10 +51,9 @@ class GoogleCalendarApi(TestCase):
         self.delete(access_token, calendar_id)
         self.assertEqual(count, len(self.list(access_token)))
 
-
     def test_add_event(self):
         calendar_id = 'pr3dj0unj2fbtlisn4pi5boj2o@group.calendar.google.com'
-        with open('token_1', 'r') as f:
+        with open('token_2', 'r') as f:
             access_token = f.read()
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
 
@@ -75,7 +73,7 @@ class GoogleCalendarApi(TestCase):
 
     def test_get_event_list(self):
         calendar_id = 'pr3dj0unj2fbtlisn4pi5boj2o@group.calendar.google.com'
-        with open('token_1', 'r') as f:
+        with open('token_2', 'r') as f:
             access_token = f.read()
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
 

@@ -13,7 +13,7 @@ def index(request):
         return redirect('/')
     else:
         print form.errors
-    groups = Group.objects.values_list('pk', 'name' , 'faculty__name')
+    groups = Group.objects.values_list('pk', 'name', 'faculty__name')
     return render(request, 'index.html', {'groups': groups})
 
 

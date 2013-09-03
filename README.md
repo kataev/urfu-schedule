@@ -1,12 +1,13 @@
-urfu-schedule
-===========
+Расписание занятий УРФУ
+=======================
 
 Парсинг расписания Уральского федерального университета.
 
+ Meta
+-----
 
-Meta
-====
+-   author: Катаев Денис
 
-* author: Катаев Денис
-* email:  denis.a.kataev@gmail.com
-* status: в разработке
+-   *email:  denis.a.kataev@gmail.com*
+
+-   status: в разработке

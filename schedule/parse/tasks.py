@@ -3,7 +3,7 @@ import requests
 from celery import task
 from lxml import html
 
-from .models import Faculty, Group, Lesson, Professor, Subject
+from .models import *
 
 
 def get_group_schedule(group, limit=None):
@@ -26,6 +26,7 @@ def get_group_schedule(group, limit=None):
                         c.type = type_c.get(type.text)
                         c.save()
 
+
 def get_faculty_schedule(faculty, limit=None):
     schedule = requests.get(faculty.url)
     tree = html.fromstring(schedule.text)
@@ -45,3 +46,6 @@ def get_schedule(limit=None):
     for fac in tree.xpath('//div/table/tbody/tr/td/a')[:limit]:
         faculty, created = Faculty.objects.get_or_create(name=fac.text, pk=int(fac.attrib['href'].split('/')[-2]))
         get_faculty_schedule(faculty, limit=limit)
+
+
+
