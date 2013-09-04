@@ -6,8 +6,8 @@ import datetime
 from celery.contrib.methods import task
 
 from django.db import models
+from django.utils import timezone
 from django.utils.dates import WEEKDAYS
-from django.utils.timezone import utc
 from django.contrib.auth.models import AbstractUser
 
 
@@ -101,6 +101,18 @@ class Lesson(models.Model):
     TYPE_CHOICES = ((0, u'Лекция'), (1, u'Практика'), (2, u'Лабораторная работа'))
     DAY_OF_WEEK_CHOICES = WEEKDAYS.items()
 
+    PAIR_TIME = (
+        (1, (datetime.time(8, 30), datetime.time(10, 00))),
+        (2, (datetime.time(10, 15), datetime.time(11, 45))),
+        (3, (datetime.time(12, 00), datetime.time(13, 30))),
+        (4, (datetime.time(14, 15), datetime.time(15, 45))),
+        (5, (datetime.time(16, 00), datetime.time(17, 30))),
+        (6, (datetime.time(17, 40), datetime.time(19, 05))),
+        (7, (datetime.time(19, 15), datetime.time(20, 40))),
+    )
+
+    NPAIR_CHOICES = [(i, '%s - %s' % time) for i, time in PAIR_TIME]
+
     semester = models.SmallIntegerField(u'Семестр', choices=SEMESTER_CHOICES)
     semi = models.SmallIntegerField(u'Полусеместр', choices=SEMI_CHOICES)
     week = models.NullBooleanField(u'Неделя', choices=WEEK_CHOICES)
@@ -108,7 +120,7 @@ class Lesson(models.Model):
 
     group = models.ForeignKey(Group, related_name='lessons')
 
-    npair = models.IntegerField(u'Номер пары')
+    npair = models.IntegerField(u'Номер пары', choices=NPAIR_CHOICES)
     subject = models.ForeignKey(Subject, verbose_name=u'Предмет')
     type = models.CharField(u'Тип занятия', max_length=300)
     professor = models.ForeignKey(Professor, verbose_name=u'Преподаватель')
@@ -117,11 +129,18 @@ class Lesson(models.Model):
     def __unicode__(self):
         return u'%s %d, %s' % (self.get_day_display(), self.npair, self.subject)
 
+    @property
+    def time(self):
+        return dict(self.PAIR_TIME)[self.npair]
+
 
 class Event(models.Model):
     lesson = models.ForeignKey('Lesson', related_name='events')
-    event_id = models.CharField(max_length=300)
-    week = models.IntegerField(u'Номер недели')
+    event_id = models.CharField(max_length=300, null=True)
+    date = models.DateField(u'Дата занятия')
+
+    def __unicode__(self):
+        return u'%s %s' % (self.lesson, self.date)
 
     @task
     def create_event(self):
@@ -129,21 +148,39 @@ class Event(models.Model):
         social_auth = user.social_auth.get(provider='google-oauth2')
         access_token = social_auth.extra_data['access_token']
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
-
+        start, end = self.lesson.time
+        start, end = datetime.datetime.combine(self.date, start), datetime.datetime.combine(self.date, end)
+        current_tz = timezone.get_current_timezone()
+        start = current_tz.localize(start)
+        end = current_tz.localize(end)
         data = {
-            'start': {'dateTime': datetime.datetime.utcnow().replace(hour=10).isoformat(), 'timeZone': 'Europe/Zurich'},
-            'end': {'dateTime': datetime.datetime.utcnow().isoformat(), 'timeZone': 'Europe/Zurich'},
+            'start': {'dateTime': start.isoformat()},
+            'end': {'dateTime': end.isoformat()},
             'summary': unicode(self.lesson),
             'description': 'Created from api description',
             'location': self.lesson.room,
         }
-
-        print data
+        if not self.lesson.group.calendar_id:
+            self.lesson.group.create_calendar()
         r = requests.post("https://www.googleapis.com/calendar/v3/calendars/%s/events" % self.lesson.group.calendar_id,
                           headers=authorization_header, data=json.dumps(data))
         print r.content
         if r.ok:
-            self.event_id = r['id']
+            self.event_id = r.json()['id']
+            self.save()
+
+    @task
+    def delete_event(self):
+        user = AUser.objects.get(pk=2)
+        social_auth = user.social_auth.get(provider='google-oauth2')
+        access_token = social_auth.extra_data['access_token']
+        authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
+        url = "https://www.googleapis.com/calendar/v3/calendars/%s/events/%s" % (self.lesson.group.calendar_id, self.event_id)
+        r = requests.delete(url, headers=authorization_header)
+
+        print r.content
+        if r.ok:
+            self.event_id = None
             self.save()
 
 
@@ -161,7 +198,7 @@ class AUser(AbstractUser):
 
     def get_date_point(self, date=None):
         if date is None:
-            date = datetime.datetime.utcnow().replace(tzinfo=utc)
+            date = datetime.datetime.utcnow()
         if 6 <= date.month <= 12:
             semester = 1
         else:
@@ -173,5 +210,12 @@ class AUser(AbstractUser):
     def personal_schedule(self):
         semester, semi, week, day = self.get_date_point()
         day -= 1
-        lessons = Lesson.objects.filter(group__in=self.classes.all()).filter(semester=semester, semi=semi, week=week % 2, day=day)
+        lessons = Lesson.objects.filter(group__in=self.classes.all()).filter(semester=semester, semi=semi,
+                                                                             week=week % 2, day=day)
         return lessons
+
+    def create_events(self):
+        date = datetime.date.today()
+        for l in self.personal_schedule():
+            e = Event(lesson=l, date=date)
+            e.save()
