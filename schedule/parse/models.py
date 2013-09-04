@@ -79,6 +79,17 @@ class Group(models.Model):
             self.calendar_id = None
             self.save()
 
+    @task
+    def list_events(self):
+        user = AUser.objects.get(pk=2)
+        social_auth = user.social_auth.get(provider='google-oauth2')
+        access_token = social_auth.extra_data['access_token']
+        authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
+        r = requests.get('https://www.googleapis.com/calendar/v3/calendars/%s/events' % self.calendar_id,
+                         headers=authorization_header)
+
+        print r.content
+
 
 class Professor(models.Model):
     name = models.CharField(u'Имя', max_length=300)
@@ -133,6 +144,12 @@ class Lesson(models.Model):
     def time(self):
         return dict(self.PAIR_TIME)[self.npair]
 
+    @property
+    def location(self):
+        address = {u'Р': u'Мира, 32'}
+        if self.room:
+            return address.get(self.room[0], '')
+
 
 class Event(models.Model):
     lesson = models.ForeignKey('Lesson', related_name='events')
@@ -153,18 +170,19 @@ class Event(models.Model):
         current_tz = timezone.get_current_timezone()
         start = current_tz.localize(start)
         end = current_tz.localize(end)
+        description = u""" Преподаваель: %s """ % (self.lesson.professor,)
         data = {
             'start': {'dateTime': start.isoformat()},
             'end': {'dateTime': end.isoformat()},
-            'summary': unicode(self.lesson),
-            'description': 'Created from api description',
+            'summary': unicode(self.lesson.subject),
+            'description': description,
             'location': self.lesson.room,
         }
         if not self.lesson.group.calendar_id:
             self.lesson.group.create_calendar()
         r = requests.post("https://www.googleapis.com/calendar/v3/calendars/%s/events" % self.lesson.group.calendar_id,
                           headers=authorization_header, data=json.dumps(data))
-        print r.content
+
         if r.ok:
             self.event_id = r.json()['id']
             self.save()
@@ -175,10 +193,9 @@ class Event(models.Model):
         social_auth = user.social_auth.get(provider='google-oauth2')
         access_token = social_auth.extra_data['access_token']
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
-        url = "https://www.googleapis.com/calendar/v3/calendars/%s/events/%s" % (self.lesson.group.calendar_id, self.event_id)
-        r = requests.delete(url, headers=authorization_header)
+        url = "https://www.googleapis.com/calendar/v3/calendars/%s/events/" % self.lesson.group.calendar_id
+        r = requests.delete(url + self.event_id, headers=authorization_header)
 
-        print r.content
         if r.ok:
             self.event_id = None
             self.save()
@@ -192,9 +209,8 @@ class AUser(AbstractUser):
         social_auth = self.social_auth.get(provider='google-oauth2')
         access_token = social_auth.extra_data['access_token']
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
-        r = requests.post("https://www.googleapis.com/calendar/v3/users/me/calendarList",
-                          headers=authorization_header, data=json.dumps({'id': group.calendar_id}))
-        print r.content
+        requests.post("https://www.googleapis.com/calendar/v3/users/me/calendarList",
+                      headers=authorization_header, data=json.dumps({'id': group.calendar_id}))
 
     def get_date_point(self, date=None):
         if date is None:
@@ -219,3 +235,13 @@ class AUser(AbstractUser):
         for l in self.personal_schedule():
             e = Event(lesson=l, date=date)
             e.save()
+
+    def calendar_list(self):
+        social_auth = self.social_auth.get(provider='google-oauth2')
+        access_token = social_auth.extra_data['access_token']
+        authorization_header = {"Authorization": "OAuth %s" % access_token}
+
+        r = requests.get("https://www.googleapis.com/calendar/v3/users/me/calendarList",
+                         headers=authorization_header)
+        if r.ok:
+            return r.json()['items']

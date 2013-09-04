@@ -17,14 +17,15 @@ def get_group_schedule(group, limit=None):
             for day, (header, table) in enumerate(zip(container.xpath('.//h1'), container.xpath('.//table'))):
                 for row in table.xpath('.//tr'):
                     row = row.xpath('.//td')
-                    npair, time, subject_name, type, professor_name, room = row
+                    npair, time, subject_name, l_type, professor_name, room = row
                     if subject_name.text and professor_name.text:
                         c = Lesson(group=group, semester=semester, semi=semi, week=week, day=day)
                         c.professor, created = Professor.objects.get_or_create(name=professor_name.text)
                         c.subject, created = Subject.objects.get_or_create(name=subject_name.text)
                         type_c = dict((v, k) for k, v in Lesson.TYPE_CHOICES)
                         c.npair = int(npair.text)
-                        c.type = type_c.get(type.text)
+                        c.type = type_c.get(l_type.text)
+                        c.room = room
                         c.save()
 
 
