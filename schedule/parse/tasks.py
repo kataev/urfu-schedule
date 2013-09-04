@@ -12,7 +12,8 @@ def get_group_schedule(group, limit=None):
         tree = html.fromstring(schedule.text)
         for container in tree.xpath('//div[@class="tx-studentschedule-pi1"]/div[@id]'):
             semester = int(u'Весенний' not in container.xpath('.//div')[0].tail)
-            week = int(container.attrib['id'].replace('week_', ''))
+            week = int(container.attrib['id'].replace('week_', '')) % 2
+            print week
             for day, (header, table) in enumerate(zip(container.xpath('.//h1'), container.xpath('.//table'))):
                 for row in table.xpath('.//tr'):
                     row = row.xpath('.//td')

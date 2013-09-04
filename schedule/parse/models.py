@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 import json
 import requests
+import datetime
 
 from celery.contrib.methods import task
 
 from django.db import models
 from django.utils.dates import WEEKDAYS
+from django.utils.timezone import utc
 from django.contrib.auth.models import AbstractUser
 
 
@@ -45,7 +47,7 @@ class Group(models.Model):
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
         r = requests.post('https://www.googleapis.com/calendar/v3/calendars',
                           headers=authorization_header,
-                          data=json.dumps({'summary': self.name}))
+                          data=json.dumps({'summary': self.name, 'timeZone': 'Asia/Yekaterinburg'}))
         print r.content
         if r.ok:
             calendar_id = r.json()['id']
@@ -116,8 +118,37 @@ class Lesson(models.Model):
         return u'%s %d, %s' % (self.get_day_display(), self.npair, self.subject)
 
 
+class Event(models.Model):
+    lesson = models.ForeignKey('Lesson', related_name='events')
+    event_id = models.CharField(max_length=300)
+    week = models.IntegerField(u'Номер недели')
+
+    @task
+    def create_event(self):
+        user = AUser.objects.get(pk=2)
+        social_auth = user.social_auth.get(provider='google-oauth2')
+        access_token = social_auth.extra_data['access_token']
+        authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
+
+        data = {
+            'start': {'dateTime': datetime.datetime.utcnow().replace(hour=10).isoformat(), 'timeZone': 'Europe/Zurich'},
+            'end': {'dateTime': datetime.datetime.utcnow().isoformat(), 'timeZone': 'Europe/Zurich'},
+            'summary': unicode(self.lesson),
+            'description': 'Created from api description',
+            'location': self.lesson.room,
+        }
+
+        print data
+        r = requests.post("https://www.googleapis.com/calendar/v3/calendars/%s/events" % self.lesson.group.calendar_id,
+                          headers=authorization_header, data=json.dumps(data))
+        print r.content
+        if r.ok:
+            self.event_id = r['id']
+            self.save()
+
+
 class AUser(AbstractUser):
-    classes = models.ManyToManyField(Group)
+    classes = models.ManyToManyField('Group')
 
     @task
     def join_to_group(self, group):
@@ -127,3 +158,20 @@ class AUser(AbstractUser):
         r = requests.post("https://www.googleapis.com/calendar/v3/users/me/calendarList",
                           headers=authorization_header, data=json.dumps({'id': group.calendar_id}))
         print r.content
+
+    def get_date_point(self, date=None):
+        if date is None:
+            date = datetime.datetime.utcnow().replace(tzinfo=utc)
+        if 6 <= date.month <= 12:
+            semester = 1
+        else:
+            semester = 2
+        semi = 1
+        week, day = date.isocalendar()[1:]
+        return semester, semi, week, day
+
+    def personal_schedule(self):
+        semester, semi, week, day = self.get_date_point()
+        day -= 1
+        lessons = Lesson.objects.filter(group__in=self.classes.all()).filter(semester=semester, semi=semi, week=week % 2, day=day)
+        return lessons
