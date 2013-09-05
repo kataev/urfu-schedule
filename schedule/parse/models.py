@@ -50,11 +50,11 @@ class Group(models.Model):
         r = requests.post('https://www.googleapis.com/calendar/v3/calendars',
                           headers=authorization_header,
                           data=json.dumps({'summary': self.name,
-                                           'description': u'Расписание группы %s, факультет "%s"' % (self.name, self.faculty),
+                                           'description': u'Расписание группы %s, факультет "%s"' % (
+                                               self.name, self.faculty),
                                            'timeZone': 'Asia/Yekaterinburg',
                                            'location': u'Россия, Свердловская область, Екатеринбург',
                           }))
-
         calendar_id = r.json()['id']
         self.calendar_id = calendar_id
         self.save()
@@ -78,7 +78,6 @@ class Group(models.Model):
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
         r = requests.delete('https://www.googleapis.com/calendar/v3/calendars/%s' % self.calendar_id,
                             headers=authorization_header)
-
         if r.ok:
             self.calendar_id = None
             self.save()
@@ -91,7 +90,6 @@ class Group(models.Model):
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
         r = requests.get('https://www.googleapis.com/calendar/v3/calendars/%s/events' % self.calendar_id,
                          headers=authorization_header)
-
         print r.content
 
     def create_events(self):
@@ -169,6 +167,12 @@ class Lesson(models.Model):
         e, created = Event.objects.get_or_create(lesson=self, date=date)
         return e
 
+    @property
+    def siblings(self):
+        queryset = Lesson.objects.filter(semester=self.semester, semi=self.semi, week=self.week, day=self.day)
+        if self.room:
+            return queryset.filter(room=self.room, npair=self.npair)
+
 
 class Event(models.Model):
     lesson = models.ForeignKey('Lesson', related_name='events')
@@ -233,7 +237,6 @@ class AUser(AbstractUser):
         requests.post("https://www.googleapis.com/calendar/v3/users/me/calendarList",
                       headers=authorization_header, data=json.dumps({'id': group.calendar_id}))
 
-
     def personal_schedule(self):
         semester, semi, week, day = get_date_point()
         day -= 1
@@ -248,5 +251,4 @@ class AUser(AbstractUser):
 
         r = requests.get("https://www.googleapis.com/calendar/v3/users/me/calendarList",
                          headers=authorization_header)
-
         return r.json()['items']
