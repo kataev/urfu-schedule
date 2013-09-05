@@ -25,7 +25,7 @@ def get_group_schedule(group, limit=None):
                         type_c = dict((v, k) for k, v in Lesson.TYPE_CHOICES)
                         c.npair = int(npair.text)
                         c.type = type_c.get(l_type.text)
-                        c.room = room
+                        c.room = room.text
                         c.save()
 
 
@@ -49,14 +49,3 @@ def get_schedule(limit=None):
     for fac in tree.xpath('//div/table/tbody/tr/td/a')[:limit]:
         faculty, created = Faculty.objects.get_or_create(name=fac.text, pk=int(fac.attrib['href'].split('/')[-2]))
         get_faculty_schedule.task.delay(faculty, limit=limit)
-
-
-@task
-def test2():
-    print sum([x for x in xrange(1000000)])
-
-
-@task
-def test():
-    for x in range(100):
-        test2.task.delay()
