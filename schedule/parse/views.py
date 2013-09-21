@@ -21,6 +21,10 @@ def login(request):
     return render(request, 'login.html')
 
 
+def error(request):
+    return render(request, '500.html')
+
+
 def groups(request):
     queryset = list(Group.objects.filter(name__contains=request.GET.get('q', '')).values_list('pk', 'name', 'faculty'))
     return HttpResponse(json.dumps(queryset), mimetype="application/json")

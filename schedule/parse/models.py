@@ -163,8 +163,8 @@ class Lesson(models.Model):
         address = addresses.get(self.room[0], '')
         return u'{}, {}'.format(self.room, address).strip()
 
-    def event(self, date):
-        e, created = Event.objects.get_or_create(lesson=self, date=date)
+    def event(self, user, date):
+        e, created = Event.objects.get_or_create(user=user, lesson=self, date=date)
         return e
 
     @property
@@ -178,14 +178,14 @@ class Event(models.Model):
     lesson = models.ForeignKey('Lesson', related_name='events')
     event_id = models.CharField(max_length=300, null=True)
     date = models.DateField(u'Дата занятия')
+    user = models.ForeignKey('AUser')
 
     def __unicode__(self):
         return u'%s %s' % (self.lesson, self.date)
 
     @task
     def create_event(self):
-        user = AUser.objects.get(pk=2)
-        social_auth = user.social_auth.get(provider='google-oauth2')
+        social_auth = self.user.social_auth.get(provider='google-oauth2')
         access_token = social_auth.extra_data['access_token']
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
         start, end = self.lesson.time
@@ -203,7 +203,7 @@ class Event(models.Model):
         }
         if not self.lesson.group.calendar_id:
             self.lesson.group.create_calendar()
-        r = requests.post("https://www.googleapis.com/calendar/v3/calendars/%s/events" % self.lesson.group.calendar_id,
+        r = requests.post("https://www.googleapis.com/calendar/v3/calendars/%s/events" % self.user.email,
                           headers=authorization_header, data=json.dumps(data))
         print r.content
         self.event_id = r.json()['id']
@@ -251,4 +251,17 @@ class AUser(AbstractUser):
 
         r = requests.get("https://www.googleapis.com/calendar/v3/users/me/calendarList",
                          headers=authorization_header)
-        return r.json()['items']
+        if r.ok:
+            return r.json()['items']
+        else:
+            print r.content
+
+    def create_events(self):
+        today = datetime.date.today()
+        monday = today - datetime.timedelta(days=today.weekday())
+        for date in [monday + datetime.timedelta(days=x) for x in range(14)]:
+            semester, semi, week, day = get_date_point(date)
+            for g in self.classes.all():
+                for l in g.lessons.filter(semester=semester, semi=semi, week=week % 2, day=day - 1):
+                    event = l.event(self, date)
+                    event.create_event()

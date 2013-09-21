@@ -17,6 +17,7 @@ urlpatterns = patterns('',
 urlpatterns += patterns('schedule.parse.views',
     url(r'^$', 'index', name='index'),
     url(r'^login$', 'login', name='login'),
+    url(r'^login/error$', 'error', name='error'),
     url(r'^groups$', 'groups', name='groups'),
 )
 

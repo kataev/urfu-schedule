@@ -275,6 +275,6 @@ COMPRESS_JS_FILTERS = [
     'compressor.filters.template.TemplateFilter',
 ]
 ########## END COMPRESSION CONFIGURATION
-
+LOGIN_ERROR_URL = ''
 AUTH_USER_MODEL = 'parse.AUser'
 SOCIAL_AUTH_USER_MODEL = 'parse.AUser'

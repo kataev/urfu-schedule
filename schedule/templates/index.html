@@ -57,16 +57,19 @@
                     </div>
                     <table class='table panel-body'>
                         {% for les in cl.lessons.all %}
-                            <tr>
-                                {% ifchanged les.day %}
-                                    <th rowspan="5">
+                            {% ifchanged les.day %}
+                                <tr>
+                                <th colspan="5">
                                         <span style="-webkit-transform: rotate(-90deg);">
                                             {{ les.get_day_display }}
                                         </span>
-                                    </th>
-                                {% endifchanged %}
+                                </th>
+                                </tr>
+                            {% endifchanged %}
+                            <tr>
 
-                                <td>{{ les.npair }}</td>
+
+                                <td>{{ les.get_npair_display }}</td>
                                 <td>{{ les.subject }}</td>
                                 <td>{{ les.professor }}</td>
                                 <td>{{ les.room }}</td>
