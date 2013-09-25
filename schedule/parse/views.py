@@ -46,4 +46,5 @@ def login(request):
 
 
 def error(request):
-    return render(request, '500.html')
+    return render(request, '500.html', {'message': request.session.pop('500', '')})
+

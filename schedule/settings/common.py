@@ -3,6 +3,7 @@
 
 from datetime import timedelta
 from os.path import abspath, basename, dirname, join, normpath
+from os import environ
 from sys import path
 
 from djcelery import setup_loader
@@ -277,6 +278,29 @@ COMPRESS_JS_FILTERS = [
     'compressor.filters.template.TemplateFilter',
 ]
 ########## END COMPRESSION CONFIGURATION
+
+SOCIAL_AUTH_ENABLED_BACKENDS = ('GoogleOAuth2',)
+GOOGLE_OAUTH2_CLIENT_ID = environ.get('GOOGLE_ID')
+GOOGLE_OAUTH2_CLIENT_SECRET =  environ.get('GOOGLE_SECRET')
+GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {'access_type': 'offline'}
+GOOGLE_OAUTH_EXTRA_SCOPE = ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.readonly',]
+
+AUTHENTICATION_BACKENDS = (
+    'social_auth.backends.google.GoogleOAuth2Backend',
+)
+
+SOCIAL_AUTH_PIPELINE = (
+    'social_auth.backends.pipeline.social.social_auth_user',
+    #'social_auth.backends.pipeline.associate.associate_by_email',
+    'social_auth.backends.pipeline.user.get_username',
+    'social_auth.backends.pipeline.user.create_user',
+    'social_auth.backends.pipeline.social.associate_user',
+    'social_auth.backends.pipeline.social.load_extra_data',
+    'social_auth.backends.pipeline.user.update_user_details',
+    'schedule.parse.pipeline.info',
+)
+
+
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = 'login'
 LOGIN_ERROR_URL = 'error'

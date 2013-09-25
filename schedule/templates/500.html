@@ -1,0 +1,15 @@
+{% extends 'index.html' %}
+{% block main %}
+    <div class="jumbotron">
+            <h2>Что то пошло не так <br>
+                <small>500 ошибка!</small>
+                {% if message %}
+                    <br>
+                <small>{{ message }}</small>
+                {% endif %}
+            </h2>
+
+            <p><a class="btn btn-lg btn-primary" href="{% url 'index' %}">На главную</a></p>
+        </div>
+
+{% endblock %}
