@@ -68,7 +68,8 @@ class Group(models.Model):
         r = requests.post('https://www.googleapis.com/calendar/v3/calendars/%s/acl' % self.calendar_id,
                           headers=authorization_header,
                           data=json.dumps({'role': 'reader', 'scope': {'type': 'default'}}))
-        print r.content
+        if r.ok:
+            return r.ok
 
     @task
     def delete_calendar(self):
@@ -178,13 +179,15 @@ class Event(models.Model):
     lesson = models.ForeignKey('Lesson', related_name='events')
     event_id = models.CharField(max_length=300, null=True)
     date = models.DateField(u'Дата занятия')
-    user = models.ForeignKey('AUser')
+    user = models.ForeignKey('AUser', related_name='events')
 
     def __unicode__(self):
         return u'%s %s' % (self.lesson, self.date)
 
     @task
     def create_event(self):
+        if self.event_id:
+            return self.event_id
         social_auth = self.user.social_auth.get(provider='google-oauth2')
         access_token = social_auth.extra_data['access_token']
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
@@ -205,25 +208,29 @@ class Event(models.Model):
             self.lesson.group.create_calendar()
         r = requests.post("https://www.googleapis.com/calendar/v3/calendars/%s/events" % self.user.email,
                           headers=authorization_header, data=json.dumps(data))
-        print r.content
-        self.event_id = r.json()['id']
-        self.save()
+        if r.ok:
+            self.event_id = r.json()['id']
+            self.save()
+        else:
+            print r.content
 
 
     @task
     def delete_event(self):
         if not self.event_id:
             return None
-        user = AUser.objects.get(pk=2)
+        user = self.user
         social_auth = user.social_auth.get(provider='google-oauth2')
         access_token = social_auth.extra_data['access_token']
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
-        url = "https://www.googleapis.com/calendar/v3/calendars/%s/events/" % self.lesson.group.calendar_id
+        url = "https://www.googleapis.com/calendar/v3/calendars/%s/events/" % self.user.email
         r = requests.delete(url + self.event_id, headers=authorization_header)
 
         if r.ok:
             self.event_id = None
             self.save()
+        else:
+            print r.content
 
 
 class AUser(AbstractUser):
@@ -256,6 +263,7 @@ class AUser(AbstractUser):
         else:
             print r.content
 
+    @task
     def create_events(self):
         today = datetime.date.today()
         monday = today - datetime.timedelta(days=today.weekday())
@@ -264,4 +272,4 @@ class AUser(AbstractUser):
             for g in self.classes.all():
                 for l in g.lessons.filter(semester=semester, semi=semi, week=week % 2, day=day - 1):
                     event = l.event(self, date)
-                    event.create_event()
+                    event.create_event.apply()

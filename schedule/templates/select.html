@@ -1,0 +1,37 @@
+{% extends 'index.html' %}
+{% block main %}
+    {% load crispy_forms_tags %}
+    <form method='POST' action='{% url "select" %}' role="form">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <input type='submit' class='btn'>
+    </form>
+{% endblock %}
+{% block js %}
+    <script>
+        var filter = function (parsedResponse) {
+            console.log(parsedResponse)
+            return parsedResponse['objects']
+        }
+
+        $(function () {
+            $('#id_group').typeahead([
+                {
+                    name: 'group',
+                    valueKey: 'name',
+                    remote: {
+                        url: '/api/v1/group/?name__contains=%QUERY',
+                        'filter': filter
+                    },
+                    prefetch: {
+                        url: '/api/v1/group/',
+                        'filter': filter
+                    },
+                    template: function(d){
+                        return d.name + ' - ' + d.faculty;
+                    }
+                }
+            ]);
+        })
+    </script>
+{% endblock %}

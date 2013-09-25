@@ -3,4 +3,4 @@ from .models import Group
 
 
 class GroupSelectForm(forms.Form):
-    group = forms.ModelChoiceField(Group.objects.all(), to_field_name='name')
+    group = forms.ModelChoiceField(Group.objects.all(), to_field_name='name', widget=forms.TextInput())

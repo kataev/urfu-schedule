@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="description" content="urfu-schedule">
+    <meta name="author" content="https://plus.google.com/u/0/101946326841894739802">
 
     <title>Расписание в телефон</title>
 
@@ -13,6 +13,7 @@
 
     <!-- Custom styles for this template -->
     <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/static/css/typeahead.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -27,16 +28,16 @@
     <div class="header">
         <ul class="nav nav-pills pull-right">
             {% if user.is_authenticated %}
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <strong>{{ user }}</strong> <b class="caret"></b>
-                    </a>
-                    <ul class="dropdown-menu" role='menu'>
-                        <li><a href="{% url "logout" %}">{% trans 'Logout' %}</a></li>
-                    </ul>
-                </li>
+                <li><a href="#">
+                    <span class='glyphicon glyphicon-user'></span>
+                    <strong>{{ user|capfirst }}</strong> </a></li>
+                <li><a href="{% url "logout" %}">
+                    <span class='glyphicon glyphicon-log-out'></span>
+                    {% trans 'Logout' %}</a></li>
             {% else %}
-                <li><a href='{% url "socialauth_begin" 'google-oauth2' %}'>{% trans 'Login' %}</a></li>
+                <li><a href='{% url "login" %}'>
+                    <span class='glyphicon glyphicon-log-in'></span>
+                    {% trans 'Login' %}</a></li>
             {% endif %}
         </ul>
         <h3 class="text-muted"><a href='/'>Расписание</a>
@@ -44,68 +45,59 @@
         </h3>
     </div>
     {% block main %}
-        {% if not user.is_authenticated %}
-            {% include 'promo.html' %}
-        {% else %}
+        <div class="jumbotron">
+            <h1>Расписание пар <br>
+                <small>В вашем телефоне!</small>
+            </h1>
 
-            {% for cl in user.classes.all %}
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4>{{ cl.name }}
-                            <small>{{ cl.faculty }}</small>
-                        </h4>
-                    </div>
-                    <table class='table panel-body'>
-                        {% for les in cl.lessons.all %}
-                            {% ifchanged les.day %}
-                                <tr>
-                                <th colspan="5">
-                                        <span style="-webkit-transform: rotate(-90deg);">
-                                            {{ les.get_day_display }}
-                                        </span>
-                                </th>
-                                </tr>
-                            {% endifchanged %}
-                            <tr>
+            <p class="lead">Зарегистрируйтесь и вы сможете дежать расписание своих пар всегда под рукой, в своем
+                телефоне!</p>
+
+            <p><a class="btn btn-lg btn-success" href="{% url 'login' %}">Зарегистрируйтесь сейчас</a></p>
+        </div>
+
+        <div class="row marketing">
+            <div class="col-lg-6">
+                <h4>Оповещения</h4>
+
+                <p>Настраиваемые оповещения прямо в телефон, по sms или на email.</p>
+
+                <h4>Всегда всежее расписание</h4>
+
+                <p>Расписание доставляется к вам с сайта университета!</p>
 
 
-                                <td>{{ les.get_npair_display }}</td>
-                                <td>{{ les.subject }}</td>
-                                <td>{{ les.professor }}</td>
-                                <td>{{ les.room }}</td>
-                            </tr>
-                        {% endfor %}
-                    </table>
-                    <div class="panel-footer">Panel footer</div>
-                </div>
+            </div>
 
+            <div class="col-lg-6">
+                <h4>Subheading</h4>
 
-            {% empty %}
-                <form method='POST'>
-                    {% csrf_token %}
-                    <label for="favorite_team">Группа:</label>
-                    <input type="text" name="group" id="group" list="group_list">
-                    <datalist id='group_list'>
-                        {% for pk, name, faculty in groups %}
-                            <option value='{{ name }}'>{{ faculty }}</option>
-                        {% endfor %}
-                    </datalist>
-                    <button>Сохранить</button>
-                </form>
-            {% endfor %}
+                <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
 
-        {% endif %}
+                <h4>Subheading</h4>
+
+                <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet
+                    fermentum.</p>
+
+                <h4>Subheading</h4>
+
+                <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+            </div>
+        </div>
+
     {% endblock %}
 
     <div class="footer">
-        <p>&copy; Company 2013</p>
+        <p>&copy; <a href='https://plus.google.com/u/0/101946326841894739802'>Катаев Денис</a> 2013</p>
     </div>
 
 </div>
 
 <script src="//code.jquery.com/jquery.js"></script>
-
 <script src="/static/js/bootstrap.js"></script>
 <script src="/static/js/typeahead.js"></script>
+<script src="/static/js/hogan-2.0.0.js"></script>
+{% block js %}
+{% endblock %}
 </body>
 </html>

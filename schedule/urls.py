@@ -17,8 +17,23 @@ urlpatterns = patterns('',
 urlpatterns += patterns('schedule.parse.views',
     url(r'^$', 'index', name='index'),
     url(r'^login$', 'login', name='login'),
+
+    url(r'^fill$', 'fill', name='fill'),
+    url(r'^remove$', 'remove', name='remove'),
+
+    url(r'^select$', 'select', name='select'),
+
     url(r'^login/error$', 'error', name='error'),
-    url(r'^groups$', 'groups', name='groups'),
+)
+
+from parse.api import FacultyResource, GroupResource
+from tastypie.api import Api
+
+v1_api = Api(api_name='v1')
+v1_api.register(GroupResource())
+
+urlpatterns += patterns('',
+     (r'^api/', include(v1_api.urls)),
 )
 
 urlpatterns += patterns('django.contrib.auth.views',

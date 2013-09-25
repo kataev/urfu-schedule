@@ -192,13 +192,15 @@ DJANGO_APPS = (
 
 THIRD_PARTY_APPS = (
     # Database migration helpers:
-    'south',
+    # 'south',
 
     # Static file management:
     'compressor',
 
     # Asynchronous task queue:
     'djcelery',
+    'tastypie',
+    'crispy_forms',
     'social_auth',
 )
 
@@ -275,6 +277,10 @@ COMPRESS_JS_FILTERS = [
     'compressor.filters.template.TemplateFilter',
 ]
 ########## END COMPRESSION CONFIGURATION
-LOGIN_ERROR_URL = ''
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = 'login'
+LOGIN_ERROR_URL = 'error'
 AUTH_USER_MODEL = 'parse.AUser'
 SOCIAL_AUTH_USER_MODEL = 'parse.AUser'
+TASTYPIE_DEFAULT_FORMATS = ['json']
+CRISPY_TEMPLATE_PACK = 'bootstrap3'

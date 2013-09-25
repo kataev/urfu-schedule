@@ -1,0 +1,15 @@
+{% extends 'index.html' %}
+{% block main %}
+    <div class="jumbotron">
+        <h1>Расписание пар <br>
+            <small>В вашем телефоне!</small>
+        </h1>
+
+        <p><a class="btn btn-lg btn-success" href="{% url 'fill' %}">
+            <span class="glyphicon glyphicon-calendar"></span>
+            Заполнить календарь на 2 недели</a></p>
+        <p><a class="btn btn-lg btn-warning" href="{% url 'remove' %}">
+            <span class="glyphicon glyphicon-remove"></span>
+            Очистить календарь</a></p>
+    </div>
+{% endblock %}
