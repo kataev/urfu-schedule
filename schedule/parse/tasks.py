@@ -38,7 +38,7 @@ def get_faculty_schedule(faculty, limit=None):
     schedule = requests.get(faculty.url)
     tree = html.fromstring(schedule.text)
     groups = []
-    for i, grade in enumerate(tree.xpath("//div[@class='groups-list']")[:limit]):
+    for i, grade in enumerate(tree.xpath("//div[@class='groups']")[:limit]):
         for group in grade.xpath('.//a[@href]')[:limit]:
             pk = int(group.attrib['href'].split('/')[-2])
             defaults = {'course': i, 'name': group.text, 'faculty': faculty}
