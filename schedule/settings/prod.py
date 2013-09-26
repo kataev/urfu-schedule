@@ -141,6 +141,6 @@ SECRET_KEY = environ.get('SECRET_KEY', SECRET_KEY)
 
 ########## ALLOWED HOSTS CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['.herokuapp.com']
+ALLOWED_HOSTS = ['ec2-54-213-160-164.us-west-2.compute.amazonaws.com']
 ########## END ALLOWED HOST CONFIGURATION
 
