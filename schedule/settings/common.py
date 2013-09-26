@@ -197,6 +197,7 @@ THIRD_PARTY_APPS = (
 
     # Static file management:
     'compressor',
+    'django_extensions',
 
     # Asynchronous task queue:
     'djcelery',
