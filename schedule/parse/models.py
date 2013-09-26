@@ -208,8 +208,6 @@ class Event(models.Model):
             'description': description,
             'location': self.lesson.location,
         }
-        if not self.lesson.group.calendar_id:
-            self.lesson.group.create_calendar()
         r = requests.post("https://www.googleapis.com/calendar/v3/calendars/%s/events" % self.user.email,
                           headers=authorization_header, data=json.dumps(data))
         if r.ok:
