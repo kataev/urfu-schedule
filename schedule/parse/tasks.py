@@ -10,13 +10,14 @@ from .models import *
 def get_group_schedule(group, limit=None):
     is_ok = False
     for semi in xrange(1, 3):
-        schedule = requests.get(group.url + '/week/even/semi_semester/%d/' % semi)
-        is_ok = is_ok and schedule.ok
-        tree = html.fromstring(schedule.text)
-        for container in tree.xpath('//div[@class="tx-studentschedule-pi1"]/div[@id]'):
+
+        for week, wname in (('even', 'odd'), (0, 1)):
+            schedule = requests.get(group.url + '/week/%s/semi_semester/%d/' % (wname, semi))
+            print 'semi', semi, schedule.ok
+            container = html.fromstring(schedule.text)
+            print 'cont', container
             semester = int(u'Весенний' not in container.xpath('.//div')[0].tail)
-            week = int(container.attrib['id'].replace('week_', '')) % 2
-            for day, (header, table) in enumerate(zip(container.xpath('.//h1'), container.xpath('.//table'))):
+            for day, (header, table) in enumerate(zip(container.xpath('.//h1'), container.xpath('.//table[@class="contenttable"]'))):
                 for row in table.xpath('.//tr'):
                     row = row.xpath('.//td')
                     npair, time, subject_name, l_type, professor_name, room = row
@@ -38,8 +39,11 @@ def get_faculty_schedule(faculty, limit=None):
     schedule = requests.get(faculty.url)
     tree = html.fromstring(schedule.text)
     groups = []
+    print 'get faculty', faculty
     for i, grade in enumerate(tree.xpath("//div[@class='groups']")[:limit]):
+        print 'grade', grade
         for group in grade.xpath('.//a[@href]')[:limit]:
+            print 'group', group
             pk = int(group.attrib['href'].split('/')[-2])
             defaults = {'course': i, 'name': group.text, 'faculty': faculty}
             group, created = Group.objects.get_or_create(pk=pk, defaults=defaults)
@@ -54,6 +58,7 @@ def get_schedule(limit=None):
     tree = html.fromstring(schedule.text)
     department = []
     for fac in tree.xpath('//div/table/tbody/tr/td/a')[:limit]:
+        print 'fac', fac
         faculty, created = Faculty.objects.get_or_create(name=fac.text, pk=int(fac.attrib['href'].split('/')[-2]))
         get_faculty_schedule.task.delay(faculty, limit=limit)
         department.append(faculty)
