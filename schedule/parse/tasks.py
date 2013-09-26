@@ -47,7 +47,7 @@ def get_faculty_schedule(faculty, limit=None):
             pk = int(group.attrib['href'].split('/')[-2])
             defaults = {'course': i, 'name': group.text, 'faculty': faculty}
             group, created = Group.objects.get_or_create(pk=pk, defaults=defaults)
-            get_group_schedule.task.delay(group, limit=limit)
+            get_group_schedule.task.subtask().delay(group, limit=limit)
             groups.append(group)
     return groups
 
@@ -60,6 +60,6 @@ def get_schedule(limit=None):
     for fac in tree.xpath('//div/table/tbody/tr/td/a')[:limit]:
         print 'fac', fac
         faculty, created = Faculty.objects.get_or_create(name=fac.text, pk=int(fac.attrib['href'].split('/')[-2]))
-        get_faculty_schedule.task.delay(faculty, limit=limit)
+        get_faculty_schedule.task.subtask().delay(faculty, limit=limit)
         department.append(faculty)
     return department

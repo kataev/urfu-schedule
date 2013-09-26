@@ -8,3 +8,5 @@ requests
 lxml
 django-social-auth
 pytz
+django-tastypie
+django-crispy-forms
