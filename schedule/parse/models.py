@@ -21,7 +21,7 @@ class Faculty(models.Model):
 
     @property
     def url(self):
-        return 'http://urfu.ru/student/schedule/faculty/%d/' % self.pk
+        return 'http://urfu.ru/student/schedule/schedule/list/group/institute/%d/' % self.pk
 
 
 class Group(models.Model):
