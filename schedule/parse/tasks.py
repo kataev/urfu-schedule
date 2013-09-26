@@ -11,7 +11,7 @@ def get_group_schedule(group, limit=None):
     is_ok = False
     for semi in xrange(1, 3):
         schedule = requests.get(group.url + '%d/' % semi)
-        is_ok = is_ok && schedule.ok
+        is_ok = is_ok and schedule.ok
         tree = html.fromstring(schedule.text)
         for container in tree.xpath('//div[@class="tx-studentschedule-pi1"]/div[@id]'):
             semester = int(u'Весенний' not in container.xpath('.//div')[0].tail)
