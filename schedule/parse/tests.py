@@ -11,7 +11,7 @@ from .models import Faculty, Group
 
 class ScheduleGetTest(TestCase):
     def test_basic(self):
-        result = get_schedule.task.delay(limit=10)
+        result = get_schedule.task.delay(limit=2)
         self.assertTrue(Faculty.objects.count())
         self.assertTrue(Group.objects.count())
         self.assertTrue(Lesson.objects.count())

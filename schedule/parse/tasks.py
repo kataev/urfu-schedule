@@ -10,24 +10,29 @@ from .models import *
 def get_group_schedule(group, limit=None):
     is_ok = False
     for semi in xrange(1, 3):
-
         for week, wname in (('even', 'odd'), (0, 1)):
             schedule = requests.get(group.url + '/week/%s/semi_semester/%d/' % (wname, semi))
             print 'semi', semi, schedule.ok
             container = html.fromstring(schedule.text)
             print 'cont', container
             semester = int(u'Весенний' not in container.xpath('.//div')[0].tail)
-            for day, (header, table) in enumerate(zip(container.xpath('.//h1'), container.xpath('.//table[@class="contenttable"]'))):
+            for day, (header, table) in enumerate(
+                    zip(container.xpath('.//h1'), container.xpath('.//table[@class="contenttable"]'))):
                 for row in table.xpath('.//tr'):
                     row = row.xpath('.//td')
+                    if not len(row) == 6:
+                        continue
                     npair, time, subject_name, l_type, professor_name, room = row
+
                     if subject_name.text and professor_name.text:
+                        # import ipdb; ipdb.set_trace()
+                        print row
                         subject, created = Subject.objects.get_or_create(name=subject_name.text)
                         c, created = Lesson.objects.get_or_create(group=group, semester=semester, semi=semi, week=week,
-                                                                  day=day, subject=subject)
+                                                                  day=day, npair=int(npair.text))
+                        c.subject = subject
                         c.professor, created = Professor.objects.get_or_create(name=professor_name.text)
                         type_c = dict((v, k) for k, v in Lesson.TYPE_CHOICES)
-                        c.npair = int(npair.text)
                         c.type = type_c.get(l_type.text)
                         c.room = room.text
                         c.save()

@@ -148,10 +148,10 @@ class Lesson(models.Model):
     group = models.ForeignKey(Group, related_name='lessons')
 
     npair = models.IntegerField(u'Номер пары', choices=NPAIR_CHOICES)
-    subject = models.ForeignKey(Subject, verbose_name=u'Предмет')
-    type = models.CharField(u'Тип занятия', max_length=300)
-    professor = models.ForeignKey(Professor, verbose_name=u'Преподаватель')
-    room = models.CharField(u'Аудитория', max_length=30)
+    subject = models.ForeignKey(Subject, verbose_name=u'Предмет', null=True)
+    type = models.CharField(u'Тип занятия', max_length=300, null=True)
+    professor = models.ForeignKey(Professor, verbose_name=u'Преподаватель', null=True)
+    room = models.CharField(u'Аудитория', max_length=30, blank=True, null=True, default='')
 
     def __unicode__(self):
         return u'%s %d, %s' % (self.get_day_display(), self.npair, self.subject)
