@@ -280,5 +280,5 @@ class AUser(AbstractUser):
             for g in self.classes.all():
                 for l in g.lessons.filter(semester=semester, semi=semi, week=week % 2, day=day - 1):
                     event = l.event(self, date)
-                    event.create_event.apply()
+                    event.create_event.subtask().apply()
         return True
