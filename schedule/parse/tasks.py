@@ -10,7 +10,7 @@ from .models import *
 def get_group_schedule(group, limit=None):
     is_ok = False
     for semi in xrange(1, 3):
-        schedule = requests.get(group.url + '%d/' % semi)
+        schedule = requests.get(group.url + '/week/even/semi_semester/%d/' % semi)
         is_ok = is_ok and schedule.ok
         tree = html.fromstring(schedule.text)
         for container in tree.xpath('//div[@class="tx-studentschedule-pi1"]/div[@id]'):

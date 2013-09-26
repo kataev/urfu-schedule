@@ -14,6 +14,7 @@ class ScheduleGetTest(TestCase):
         result = get_schedule.task.delay(limit=10)
         self.assertTrue(Faculty.objects.count())
         self.assertTrue(Group.objects.count())
+        self.assertTrue(Lesson.objects.count())
 
 
 class GoogleCalendarApi(TestCase):
