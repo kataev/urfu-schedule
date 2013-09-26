@@ -37,21 +37,24 @@ def get_group_schedule(group, limit=None):
 def get_faculty_schedule(faculty, limit=None):
     schedule = requests.get(faculty.url)
     tree = html.fromstring(schedule.text)
+    groups = []
     for i, grade in enumerate(tree.xpath("//div[@class='groups-list']")[:limit]):
         for group in grade.xpath('.//a[@href]')[:limit]:
             pk = int(group.attrib['href'].split('/')[-2])
             defaults = {'course': i, 'name': group.text, 'faculty': faculty}
             group, created = Group.objects.get_or_create(pk=pk, defaults=defaults)
             get_group_schedule.task.delay(group, limit=limit)
-    return schedule.ok
+            groups.append(group)
+    return groups
 
 
 @task
 def get_schedule(limit=None):
     schedule = requests.get('http://urfu.ru/student/schedule/')
     tree = html.fromstring(schedule.text)
-
+    department = []
     for fac in tree.xpath('//div/table/tbody/tr/td/a')[:limit]:
         faculty, created = Faculty.objects.get_or_create(name=fac.text, pk=int(fac.attrib['href'].split('/')[-2]))
         get_faculty_schedule.task.delay(faculty, limit=limit)
-    return schedule.ok
+        department.append(faculty)
+    return department
