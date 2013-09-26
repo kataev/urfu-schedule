@@ -39,7 +39,7 @@ class Group(models.Model):
 
     @property
     def url(self):
-        return 'http://urfu.ru/student/schedule/faculty/%d/group/%d/' % (self.faculty_id, self.pk)
+        return 'http://urfu.ru/student/schedule/schedule/list/lesson/institute/%d/sch_group/%d/' % (self.faculty_id, self.pk)
 
     @task
     def create_calendar(self):
