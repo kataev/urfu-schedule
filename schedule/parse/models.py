@@ -55,9 +55,11 @@ class Group(models.Model):
                                            'timeZone': 'Asia/Yekaterinburg',
                                            'location': u'Россия, Свердловская область, Екатеринбург',
                           }))
-        calendar_id = r.json()['id']
-        self.calendar_id = calendar_id
-        self.save()
+        if r.ok:
+            calendar_id = r.json()['id']
+            self.calendar_id = calendar_id
+            self.save()
+            return self
 
     @task
     def share_calendar(self):
@@ -82,6 +84,7 @@ class Group(models.Model):
         if r.ok:
             self.calendar_id = None
             self.save()
+            return self
 
     @task
     def list_events(self):
@@ -91,7 +94,8 @@ class Group(models.Model):
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
         r = requests.get('https://www.googleapis.com/calendar/v3/calendars/%s/events' % self.calendar_id,
                          headers=authorization_header)
-        print r.content
+        if r.ok:
+            return self
 
     def create_events(self):
         today = datetime.date.today()
@@ -211,6 +215,7 @@ class Event(models.Model):
         if r.ok:
             self.event_id = r.json()['id']
             self.save()
+            return self
         else:
             print r.content
 
@@ -229,6 +234,7 @@ class Event(models.Model):
         if r.ok:
             self.event_id = None
             self.save()
+            return self
         else:
             print r.content
 
@@ -241,8 +247,10 @@ class AUser(AbstractUser):
         social_auth = self.social_auth.get(provider='google-oauth2')
         access_token = social_auth.extra_data['access_token']
         authorization_header = {"Authorization": "OAuth %s" % access_token, 'content-type': 'application/json'}
-        requests.post("https://www.googleapis.com/calendar/v3/users/me/calendarList",
+        r = requests.post("https://www.googleapis.com/calendar/v3/users/me/calendarList",
                       headers=authorization_header, data=json.dumps({'id': group.calendar_id}))
+        if r.ok:
+            return r
 
     def personal_schedule(self):
         semester, semi, week, day = get_date_point()
@@ -273,3 +281,4 @@ class AUser(AbstractUser):
                 for l in g.lessons.filter(semester=semester, semi=semi, week=week % 2, day=day - 1):
                     event = l.event(self, date)
                     event.create_event.apply()
+        return True

@@ -8,8 +8,10 @@ from .models import *
 
 @task
 def get_group_schedule(group, limit=None):
+    is_ok = False
     for semi in xrange(1, 3):
         schedule = requests.get(group.url + '%d/' % semi)
+        is_ok = is_ok && schedule.ok
         tree = html.fromstring(schedule.text)
         for container in tree.xpath('//div[@class="tx-studentschedule-pi1"]/div[@id]'):
             semester = int(u'Весенний' not in container.xpath('.//div')[0].tail)
@@ -28,6 +30,7 @@ def get_group_schedule(group, limit=None):
                         c.type = type_c.get(l_type.text)
                         c.room = room.text
                         c.save()
+    return is_ok
 
 
 @task
@@ -40,6 +43,7 @@ def get_faculty_schedule(faculty, limit=None):
             defaults = {'course': i, 'name': group.text, 'faculty': faculty}
             group, created = Group.objects.get_or_create(pk=pk, defaults=defaults)
             get_group_schedule.task.delay(group, limit=limit)
+    return schedule.ok
 
 
 @task
@@ -50,3 +54,4 @@ def get_schedule(limit=None):
     for fac in tree.xpath('//div/table/tbody/tr/td/a')[:limit]:
         faculty, created = Faculty.objects.get_or_create(name=fac.text, pk=int(fac.attrib['href'].split('/')[-2]))
         get_faculty_schedule.task.delay(faculty, limit=limit)
+    return schedule.ok
