@@ -1,6 +1,7 @@
 {% extends 'index.html' %}
 {% block main %}
     {% load crispy_forms_tags %}
+    <h1>Выберете группу</h1>
     <form method='POST' action='{% url "select" %}' role="form">
         {% csrf_token %}
         {{ form|crispy }}
